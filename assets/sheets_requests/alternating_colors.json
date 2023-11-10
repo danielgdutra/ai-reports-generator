@@ -1,0 +1,32 @@
+[
+            {
+                "addBanding": {
+                    "bandedRange": {
+                        "range": {
+                            "sheetId": "$target_sheet_id",
+                            "startRowIndex": "$target_starting_row",
+                            "endRowIndex": "$target_final_row",
+                            "startColumnIndex": "$target_starting_column",
+                            "endColumnIndex": "$target_final_column"
+                        },
+                        "rowProperties": {
+                            "headerColor": {
+                                "red": 0.8,
+                                "green": 0.8,
+                                "blue": 0.8
+                            },
+                            "firstBandColor": {
+                                "red": 1.0,
+                                "green": 1.0,
+                                "blue": 1.0
+                            },
+                            "secondBandColor": {
+                                "red": 0.9,
+                                "green": 0.9,
+                                "blue": 0.9
+                            }
+                        }
+                    }
+                }
+            }
+        ]

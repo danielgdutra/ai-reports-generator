@@ -1,0 +1,43 @@
+[{
+  "updateCells": {
+    "rows": {
+      "values": [{
+        "pivotTable": {
+          "source": {
+                "sheetId": "${source_sheet_id}",
+                "startRowIndex": "${source_starting_row}",
+                "startColumnIndex": "${source_starting_column}",
+                "endRowIndex": "${source_final_row}",
+                "endColumnIndex": "${source_final_column}"
+            },
+          "rows": [
+            {"sourceColumnOffset": 1, "showTotals": "True", "sortOrder": "ASCENDING"}
+          ],
+          "values": [
+            {"name": "Total Jobs", "formula": "=IFERROR(SUM('Total Jobs'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Impressions", "formula": "=IFERROR(SUM('Impressions'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Clicks", "formula": "=IFERROR(SUM('Clicks'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Apply Starts", "formula": "=IFERROR(SUM('Apply Starts'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Applies", "formula": "=IFERROR(SUM('Applies'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Conversion", "formula": "=IFERROR(AVERAGE('Conversion'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Spent", "formula": "=IFERROR(SUM('Spent'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "CTR", "formula": "=IFERROR(AVERAGE('CTR'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Clicks to Apply Starts", "formula": "=IFERROR(AVERAGE('Clicks to Apply Starts'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Clicks to Applies", "formula": "=IFERROR(AVERAGE('Clicks to Applies'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "CPC", "formula": "=IFERROR(AVERAGE('CPC'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "CPA", "formula": "=IFERROR(AVERAGE('CPA'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Clicks / Total Jobs", "formula": "=IFERROR(SUM('Clicks') / SUM('Total Jobs'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Apply Starts / Total Jobs", "formula": "=IFERROR(SUM('Apply Starts') / SUM('Total Jobs'), 0)", "summarizeFunction": "CUSTOM"},
+            {"name": "Applies / Total Jobs", "formula": "=IFERROR(SUM('Applies') / SUM('Total Jobs'), 0)", "summarizeFunction": "CUSTOM"}
+          ]
+        }
+      }]
+    },
+    "start": {
+      "sheetId": "${target_sheet_id}",
+      "rowIndex": "${target_starting_row}",
+      "columnIndex": "${target_starting_column}"
+    },
+    "fields": "pivotTable"
+  }
+}]
