@@ -465,7 +465,7 @@ def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_typ
               "addChart": {
                 "chart": {
                   "spec": {
-                    "title": "Column Chart",
+                    "title": "Salary by Age",
                     "basicChart": {
                       "chartType": "COLUMN",
                       "legendPosition": "BOTTOM_LEGEND",
@@ -518,8 +518,16 @@ def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_typ
                     }
                   },
                   "position": {
-                    "newSheet": True
-                  }
+                    "overlayPosition": {
+                        "anchorCell": {
+                            "sheetId": target_sheet_id,
+                            "rowIndex": 2,
+                            "columnIndex": 2
+                        },
+                        "offsetXPixels": 50,
+                        "offsetYPixels": 50
+                        }
+                    }
                 }
               }
             }
