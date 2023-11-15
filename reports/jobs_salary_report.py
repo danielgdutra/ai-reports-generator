@@ -59,7 +59,7 @@ def generate_reports(start_date, end_date):
     full_data_columns = len(full_data[0])
 
     if full_data:
-        """sheets_conn.update_data(spreadsheet_id=SPREADSHEET_ID,
+        sheets_conn.update_data(spreadsheet_id=SPREADSHEET_ID,
                                 data_range='A1',
                                 data=full_data,
                                 target_sheet_name='Full Data'
@@ -249,16 +249,70 @@ def generate_reports(start_date, end_date):
         sheets_conn.auto_resize_columns(spreadsheet_id=SPREADSHEET_ID,
                                         target_sheet_name='Pivot Tables',
                                         auto_resize_mapping=PIVOT_TABLE_AUTO_RESIZE_MAPPING
-                                        )"""
+                                        )
         sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
                                  source_sheet_name='Full Data',
                                  target_sheet_name='Charts',
-                                 chart_type='LINE',
                                  x_axis_column_name='Age',
                                  y_axis_column_name='Salary',
-                                 chart_position={'row': 2, 'col': 2},
-                                 end_row=full_data_rows,
-                                 end_column=full_data_columns
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/age_chart.json'
                                  )
-        #print(chatgpt_conn.generate_insights(full_data).to_txt)
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Gender',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/gender_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Education Level',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/education_level_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Years of Experience',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/years_of_exp_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Job Title',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/job_title_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Country',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/country_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Ethnicity',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/ethnicity_chart.json'
+                                 )
+        sheets_conn.create_chart(spreadsheet_id=SPREADSHEET_ID,
+                                 source_sheet_name='Full Data',
+                                 target_sheet_name='Charts',
+                                 x_axis_column_name='Senior',
+                                 y_axis_column_name='Salary',
+                                 end_column=full_data_columns,
+                                 chart_request='./assets/sheets_requests/jobs_salary_report/senior_chart.json'
+                                 )
+        # print(chatgpt_conn.generate_insights(full_data).to_txt)
     return len(full_data) if full_data else 0

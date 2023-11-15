@@ -417,7 +417,7 @@ def add_basic_filter_to_all(spreadsheet_id, target_sheet_name):
     return response
 
 
-def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_type, x_axis_column_name, y_axis_column_name, chart_position, end_row, end_column):
+def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_request, x_axis_column_name, y_axis_column_name, end_column):
     # Connect to Google Sheets
     service = connect_to_sheets()
     if not service:
@@ -458,81 +458,11 @@ def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_typ
     # Debugging: Print the target_sheet_id
     print(f"Target Sheet ID: {target_sheet_id}")
 
-    chart_request = \
-        {
-          "requests": [
-            {
-              "addChart": {
-                "chart": {
-                  "spec": {
-                    "title": "Salary by Age",
-                    "basicChart": {
-                      "chartType": "COLUMN",
-                      "legendPosition": "BOTTOM_LEGEND",
-                      "axis": [
-                        {
-                          "position": "BOTTOM_AXIS",
-                          "title": "Age"
-                        },
-                        {
-                          "position": "LEFT_AXIS",
-                          "title": "Salary"
-                        }
-                      ],
-                      "domains": [
-                        {
-                          "domain": {
-                            "sourceRange": {
-                              "sources": [
-                                {
-                                  "sheetId": source_sheet_id,
-                                  "startRowIndex": 0,
-                                  "endRowIndex": 6681,
-                                  "startColumnIndex": 0,
-                                  "endColumnIndex": 1
-                                }
-                              ]
-                            }
-                          }
-                        }
-                      ],
-                      "series": [
-                        {
-                          "series": {
-                            "sourceRange": {
-                              "sources": [
-                                {
-                                  "sheetId": source_sheet_id,
-                                  "startRowIndex": 0,
-                                  "endRowIndex": 6681,
-                                  "startColumnIndex": 5,
-                                  "endColumnIndex": 6
-                                }
-                              ]
-                            }
-                          },
-                          "targetAxis": "LEFT_AXIS"
-                        }
-                      ],
-                      "headerCount": 1
-                    }
-                  },
-                  "position": {
-                    "overlayPosition": {
-                        "anchorCell": {
-                            "sheetId": target_sheet_id,
-                            "rowIndex": 2,
-                            "columnIndex": 2
-                        },
-                        "offsetXPixels": 50,
-                        "offsetYPixels": 50
-                        }
-                    }
-                }
-              }
-            }
-          ]
-        }
+    chart_request = replace_json_placeholders(
+                json_data=chart_request,
+                target_sheet_id=target_sheet_id,
+                source_sheet_id=source_sheet_id
+            )
 
     # Debugging: Print the entire chart request
     print("Chart Request:", chart_request)
@@ -545,63 +475,3 @@ def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_typ
     except Exception as e:
         print(f"An error occurred while creating the chart: {e}")
         return None
-
-
-def build_chart_spec(chart_type, data_range):
-    chart_spec = {
-        'title': f'{chart_type} Chart',
-        'basicChart': {
-            'chartType': chart_type,
-            'axis': [{'position': 'BOTTOM_AXIS'}, {'position': 'LEFT_AXIS'}],
-            'domains': [{
-                'domain': {
-                    'sourceRange': {
-                        'sources': [{
-                            'startRowIndex': data_range['start_row'],
-                            'endRowIndex': data_range['end_row'],
-                            'startColumnIndex': data_range['start_col'],
-                            'endColumnIndex': data_range['start_col']
-                        }]
-                    }
-                }
-            }],
-            'series': [{
-                'series': {
-                    'sourceRange': {
-                        'sources': [{
-                            'startRowIndex': data_range['start_row'],
-                            'endRowIndex': data_range['end_row'],
-                            'startColumnIndex': data_range['end_col'],
-                            'endColumnIndex': data_range['end_col']
-                        }]
-                    }
-                }
-            }]
-        }
-    }
-
-    # Example customization for different chart types
-    if chart_type == 'BAR' or chart_type == 'COLUMN':
-        chart_spec['basicChart']['chartType'] = 'BAR' if chart_type == 'BAR' else 'COLUMN'
-    elif chart_type == 'LINE':
-        chart_spec['basicChart']['chartType'] = 'LINE'
-        chart_spec['basicChart']['lineSmoothing'] = True
-    elif chart_type == 'PIE':
-        chart_spec['basicChart'] = {
-            'chartType': 'PIE',
-            'pieChart': {
-                'legendPosition': 'LABELED_LEGEND',
-                'threeDimensional': True
-            }
-        }
-    elif chart_type == 'SCATTER':
-        chart_spec['basicChart']['chartType'] = 'SCATTER'
-        chart_spec['basicChart']['pointSize'] = 10
-    elif chart_type == 'AREA':
-        chart_spec['basicChart']['chartType'] = 'AREA'
-    elif chart_type == 'CANDLESTICK':
-        chart_spec['basicChart']['chartType'] = 'CANDLESTICK'
-    else:
-        raise ValueError("Unsupported chart type")
-
-    return chart_spec

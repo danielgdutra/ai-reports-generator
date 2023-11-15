@@ -1,0 +1,74 @@
+{
+  "requests": [
+    {
+      "addChart": {
+        "chart": {
+          "spec": {
+            "title": "Salary by Country",
+            "basicChart": {
+              "chartType": "COLUMN",
+              "legendPosition": "BOTTOM_LEGEND",
+              "axis": [
+                {
+                  "position": "BOTTOM_AXIS",
+                  "title": "Country"
+                },
+                {
+                  "position": "LEFT_AXIS",
+                  "title": "Salary"
+                }
+              ],
+              "domains": [
+                {
+                  "domain": {
+                    "sourceRange": {
+                      "sources": [
+                        {
+                          "sheetId": "${source_sheet_id}",
+                          "startRowIndex": 0,
+                          "endRowIndex": 6681,
+                          "startColumnIndex": 6,
+                          "endColumnIndex": 7
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "series": [
+                {
+                  "series": {
+                    "sourceRange": {
+                      "sources": [
+                        {
+                          "sheetId": "${source_sheet_id}",
+                          "startRowIndex": 0,
+                          "endRowIndex": 6681,
+                          "startColumnIndex": 5,
+                          "endColumnIndex": 6
+                        }
+                      ]
+                    }
+                  },
+                  "targetAxis": "LEFT_AXIS"
+                }
+              ],
+              "headerCount": 1
+            }
+          },
+          "position": {
+            "overlayPosition": {
+              "anchorCell": {
+                "sheetId": "${target_sheet_id}",
+                "rowIndex": 42,
+                "columnIndex": 7
+              },
+              "offsetXPixels": 50,
+              "offsetYPixels": 50
+            }
+          }
+        }
+      }
+    }
+  ]
+}
