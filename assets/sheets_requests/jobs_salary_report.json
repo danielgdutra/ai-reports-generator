@@ -1,0 +1,32 @@
+[{
+  "updateCells": {
+    "rows": {
+      "values": [{
+        "pivotTable": {
+          "source": {
+                "sheetId": "${source_sheet_id}",
+                "startRowIndex": "${source_starting_row}",
+                "startColumnIndex": "${source_starting_column}",
+                "endRowIndex": "${source_final_row}",
+                "endColumnIndex": "${source_final_column}"
+            },
+          "rows": [
+            {"sourceColumnOffset": "${pivot_table_agg_column}", "showTotals": "True", "sortOrder": "ASCENDING"}
+          ],
+          "values": [
+            {"name": "Count of Rows", "formula": "=COUNTA('${column_to_count}')", "summarizeFunction": "CUSTOM"},
+            {"name": "Total Salary", "formula": "=SUM('Salary')", "summarizeFunction": "CUSTOM"},
+            {"name": "Avg Salary", "formula": "=AVERAGE('Salary')", "summarizeFunction": "CUSTOM"},
+            {"name": "% of Seniors", "formula": "=SUM('Senior')/COUNT('Senior')", "summarizeFunction": "CUSTOM"}
+          ]
+        }
+      }]
+    },
+    "start": {
+      "sheetId": "${target_sheet_id}",
+      "rowIndex": "${target_starting_row}",
+      "columnIndex": "${target_starting_column}"
+    },
+    "fields": "pivotTable"
+  }
+}]

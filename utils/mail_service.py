@@ -99,8 +99,8 @@ def generate_html(data):
 def send_mail(subject, body):
     subject = subject
     body = body
-    sender_email = "daniel.dutra@talentify.io"
-    receiver_email = "daniel.dutra@talentify.io"
+    sender_email = "daniel.dutra.45@gmail.com"
+    receiver_email = "daniel.dutra@gmail.com"
     password = os.getenv("EMAIL_PASSWORD")
 
     # Create a multipart message and set headers

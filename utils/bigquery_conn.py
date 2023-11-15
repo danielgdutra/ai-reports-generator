@@ -2,10 +2,10 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 from google.api_core.exceptions import Conflict
 from dotenv import load_dotenv
-import os, base64, json
+import os, json
 
 
-PROJECT_ID = 'talentify-premium-services'
+PROJECT_ID = 'ai-reports-generator'
 
 
 def make_schema_field(field):
@@ -50,7 +50,7 @@ class BigQueryConn:
         self.project_id = PROJECT_ID
         self.dataset_id = dataset_id
         self.credentials = service_account.Credentials.from_service_account_info(
-            json.loads(base64.b64decode(os.getenv('BIGQUERY_KEY')).decode('utf-8')), scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            json.loads(os.getenv('BIGQUERY_KEY')), scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
         self.field_list = self.load_field_list(schema_path) if schema_path is not None else []
         self.table_id = '{}.{}.{}'.format(self.project_id, self.dataset_id, table_id)
@@ -73,21 +73,6 @@ class BigQueryConn:
 
         if kwargs.get('start_date') and kwargs.get('end_date'):
             query += f" AND DATE({date_column}) BETWEEN '{kwargs.get('start_date')}' AND '{kwargs.get('end_date')}'"
-
-        if kwargs.get('client_ids'):
-            client_ids = [str(client_id) for client_id in kwargs.get('client_ids')]
-            query += f" AND client_id IN ({', '.join(client_ids)})"
-
-        # Check if demo client must be ignored
-        if kwargs.get('ignore_talentify_demo_client'):
-            query += " AND customer_id <> '43830'" if 'indeed' in self.table_id else " AND client_id <> 43830"
-
-        if kwargs.get('channels'):
-            channels = ["'" + str(channel) + "'" for channel in kwargs.get('channels')]
-            query += f" AND channel IN ({', '.join(channels)})"
-
-        if kwargs.get('record_type'):
-            query += f" AND record_type = '{kwargs.get('record_type')}'"
 
         query += ';'
         self.client.query(query)

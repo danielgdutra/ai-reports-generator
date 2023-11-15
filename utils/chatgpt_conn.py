@@ -9,15 +9,14 @@ def generate_insights(data):
         messages=[
             {
                 "role": "system",
-                "content": "You are a helpful assistant that analyses data to provide insights about job advertising"
-                           " data for clients aiming to reduce the cost per apply and increase the number of applies."
+                "content": "You are a helpful assistant that analyses data to provide useful insights."
             },
             {
                 "role": "user",
                 "content": f"Here is a summary of the client's data report: {data}\n\nProvide 10 useful insights:",
             }
         ],
-        model="gpt-3.5-turbo",
+        model="gpt-4",
     ))
 
     insights = chat_completion.choices[0].text.strip()

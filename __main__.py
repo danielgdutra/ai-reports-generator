@@ -1,7 +1,7 @@
 import argparse
 from datetime import datetime, timedelta, date
 from utils import mail_service
-from reports import amedisys_weekly, amedisys_monthly
+from reports import jobs_salary_report
 
 
 def run_sync(job, start_date, end_date):
@@ -13,7 +13,7 @@ def run_sync(job, start_date, end_date):
 
 
 def run_weekly_reports_generator(start_date, end_date):
-    reports = [amedisys_weekly]
+    reports = [jobs_salary_report]
     # Run jobs and attach the rows and errors to the email
     sync_data = [run_sync(job, start_date, end_date) for job in reports]
     html = mail_service.generate_html(sync_data)
@@ -22,7 +22,7 @@ def run_weekly_reports_generator(start_date, end_date):
 
 
 def run_monthly_reports_generator(start_date, end_date):
-    reports = [amedisys_monthly]
+    reports = [jobs_salary_report]
     # Run jobs and attach the rows and errors to the email
     sync_data = [run_sync(job, start_date, end_date) for job in reports]
     html = mail_service.generate_html([data for data in sync_data if data['status'] == '❌' or data['row_count'] == 0])
@@ -38,7 +38,7 @@ def main(start_date: date, end_date: date):
     # Uncomment next if to test new reports
     if today.weekday() in (0,1,2,3,4,5,6):
         run_weekly_reports_generator(start_date,end_date)
-        run_monthly_reports_generator(start_date, end_date)
+        #run_monthly_reports_generator(start_date, end_date)
 
     #if today.day == 1:
     #    run_monthly_reports_generator(start_date,end_date)

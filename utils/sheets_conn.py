@@ -8,7 +8,7 @@ from string import Template
 
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-CREDENTIALS_FILE = './credentials.json'
+CREDENTIALS_FILE = './my_sheets_credentials.json'
 
 
 def convert_int_keys(data, int_keys):
@@ -35,7 +35,7 @@ def replace_json_placeholders(json_data, **kwargs):
 
     int_keys = [
         'startRowIndex', 'startColumnIndex', 'endRowIndex', 'endColumnIndex',
-        'rowIndex', 'columnIndex', 'sheetId', 'sourceColumnOffset'
+        'rowIndex', 'columnIndex', 'sheetId', 'sourceColumnOffset', 'column_to_count'
     ]
 
     convert_int_keys(formatted_json, int_keys)
@@ -169,7 +169,7 @@ def append_data(spreadsheet_id, data_range, data):
 def create_pivot_table(spreadsheet_id, source_sheet_name, target_sheet_name, requests,
                        source_starting_row, source_final_row, source_starting_column, source_final_column,
                        target_starting_row, target_final_row, target_starting_column, target_final_column,
-                       pivot_table_header_mapping=None):
+                       pivot_table_agg_column, column_to_count, pivot_table_header_mapping=None):
     sheet_service = connect_to_sheets()
 
     if sheet_service:
@@ -188,7 +188,9 @@ def create_pivot_table(spreadsheet_id, source_sheet_name, target_sheet_name, req
                 target_starting_row=target_starting_row,
                 target_final_row=target_final_row,
                 target_starting_column=target_starting_column,
-                target_final_column=target_final_column
+                target_final_column=target_final_column,
+                pivot_table_agg_column=pivot_table_agg_column,
+                column_to_count=column_to_count
             )
 
             body = {"requests": pivot_table_requests}
@@ -370,27 +372,228 @@ def add_basic_filter_to_all(spreadsheet_id, target_sheet_name):
 
     requests = []
 
-    # Add a filter for each sheet name provided
     for sheet_name in target_sheet_name:
-        sheet_id = next((sheet['properties']['sheetId'] for sheet in sheets if sheet['properties']['title'] == sheet_name), None)
+        sheet_info = next((sheet for sheet in sheets if sheet['properties']['title'] == sheet_name), None)
 
-        if sheet_id is not None:
-            requests.append({
-                "setBasicFilter": {
-                    "filter": {
-                        "range": {
-                            "sheetId": sheet_id
+        if sheet_info is not None:
+            sheet_id = sheet_info['properties']['sheetId']
+            grid_properties = sheet_info['properties']['gridProperties']
+            rowCount, columnCount = grid_properties['rowCount'], grid_properties['columnCount']
+
+            # Read the data of the sheet
+            range_name = f"{sheet_name}!A1:{chr(64 + columnCount)}{rowCount}"
+            sheet_values = service.values().get(spreadsheetId=spreadsheet_id,
+                                                               range=range_name).execute().get('values', [])
+
+            # Find the last non-empty column
+            max_col = 0
+            for row in sheet_values:
+                for i in range(len(row)):
+                    if row[i].strip() != '':
+                        max_col = max(max_col, i)
+
+            if max_col > 0:
+                requests.append({
+                    "setBasicFilter": {
+                        "filter": {
+                            "range": {
+                                "sheetId": sheet_id,
+                                "startRowIndex": 0,
+                                "startColumnIndex": 0,
+                                "endColumnIndex": max_col + 1  # +1 because the end index is exclusive
+                            }
                         }
                     }
-                }
-            })
+                })
         else:
             print(f"Sheet named '{sheet_name}' not found.")
 
     if not requests:
-        print("No valid sheet names provided.")
+        print("No valid sheet names provided or no data in sheets.")
         return None
 
     body = {'requests': requests}
     response = service.batchUpdate(spreadsheetId=spreadsheet_id, body=body).execute()
     return response
+
+
+def create_chart(spreadsheet_id, source_sheet_name, target_sheet_name, chart_type, x_axis_column_name, y_axis_column_name, chart_position, end_row, end_column):
+    # Connect to Google Sheets
+    service = connect_to_sheets()
+    if not service:
+        print("Failed to connect to Google Sheets.")
+        return None
+
+    # Ensure the target sheet exists, create it if not
+    add_new_sheet_to_spreadsheet(spreadsheet_id, target_sheet_name)
+
+    # Determine the range for column headers in the source sheet based on end_column
+    last_column_letter = chr(64 + end_column)  # Assuming end_column is a 1-based index
+    range_name = f'{source_sheet_name}!A1:{last_column_letter}1'
+
+    # Fetch the first row from the source sheet to find column indices
+    result = service.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
+    columns = result.get('values', [[]])[0]
+    if x_axis_column_name not in columns or y_axis_column_name not in columns:
+        print(f"Column name '{x_axis_column_name}' or '{y_axis_column_name}' not found in the source sheet.")
+        return None
+
+    # Get the sheet metadata for debugging
+    sheet_metadata = service.get(spreadsheetId=spreadsheet_id).execute()
+    print("Sheet Metadata:", sheet_metadata)  # Debug print
+
+    # Find the sheetId for the target sheet
+    target_sheet_id = None
+    for sheet in sheet_metadata.get('sheets', []):
+        if sheet['properties']['title'] == target_sheet_name:
+            target_sheet_id = sheet['properties']['sheetId']
+            break
+
+    source_sheet_id = None
+    for sheet in sheet_metadata.get('sheets', []):
+        if sheet['properties']['title'] == source_sheet_name:
+            source_sheet_id = sheet['properties']['sheetId']
+            break
+
+    # Debugging: Print the target_sheet_id
+    print(f"Target Sheet ID: {target_sheet_id}")
+
+    chart_request = \
+        {
+          "requests": [
+            {
+              "addChart": {
+                "chart": {
+                  "spec": {
+                    "title": "Column Chart",
+                    "basicChart": {
+                      "chartType": "COLUMN",
+                      "legendPosition": "BOTTOM_LEGEND",
+                      "axis": [
+                        {
+                          "position": "BOTTOM_AXIS",
+                          "title": "Age"
+                        },
+                        {
+                          "position": "LEFT_AXIS",
+                          "title": "Salary"
+                        }
+                      ],
+                      "domains": [
+                        {
+                          "domain": {
+                            "sourceRange": {
+                              "sources": [
+                                {
+                                  "sheetId": source_sheet_id,
+                                  "startRowIndex": 0,
+                                  "endRowIndex": 6681,
+                                  "startColumnIndex": 0,
+                                  "endColumnIndex": 1
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ],
+                      "series": [
+                        {
+                          "series": {
+                            "sourceRange": {
+                              "sources": [
+                                {
+                                  "sheetId": source_sheet_id,
+                                  "startRowIndex": 0,
+                                  "endRowIndex": 6681,
+                                  "startColumnIndex": 5,
+                                  "endColumnIndex": 6
+                                }
+                              ]
+                            }
+                          },
+                          "targetAxis": "LEFT_AXIS"
+                        }
+                      ],
+                      "headerCount": 1
+                    }
+                  },
+                  "position": {
+                    "newSheet": True
+                  }
+                }
+              }
+            }
+          ]
+        }
+
+    # Debugging: Print the entire chart request
+    print("Chart Request:", chart_request)
+
+    # Send the request to the Google Sheets API
+    try:
+        response = service.batchUpdate(spreadsheetId=spreadsheet_id, body=chart_request).execute()
+        print("Chart created successfully.")
+        return response
+    except Exception as e:
+        print(f"An error occurred while creating the chart: {e}")
+        return None
+
+
+def build_chart_spec(chart_type, data_range):
+    chart_spec = {
+        'title': f'{chart_type} Chart',
+        'basicChart': {
+            'chartType': chart_type,
+            'axis': [{'position': 'BOTTOM_AXIS'}, {'position': 'LEFT_AXIS'}],
+            'domains': [{
+                'domain': {
+                    'sourceRange': {
+                        'sources': [{
+                            'startRowIndex': data_range['start_row'],
+                            'endRowIndex': data_range['end_row'],
+                            'startColumnIndex': data_range['start_col'],
+                            'endColumnIndex': data_range['start_col']
+                        }]
+                    }
+                }
+            }],
+            'series': [{
+                'series': {
+                    'sourceRange': {
+                        'sources': [{
+                            'startRowIndex': data_range['start_row'],
+                            'endRowIndex': data_range['end_row'],
+                            'startColumnIndex': data_range['end_col'],
+                            'endColumnIndex': data_range['end_col']
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+
+    # Example customization for different chart types
+    if chart_type == 'BAR' or chart_type == 'COLUMN':
+        chart_spec['basicChart']['chartType'] = 'BAR' if chart_type == 'BAR' else 'COLUMN'
+    elif chart_type == 'LINE':
+        chart_spec['basicChart']['chartType'] = 'LINE'
+        chart_spec['basicChart']['lineSmoothing'] = True
+    elif chart_type == 'PIE':
+        chart_spec['basicChart'] = {
+            'chartType': 'PIE',
+            'pieChart': {
+                'legendPosition': 'LABELED_LEGEND',
+                'threeDimensional': True
+            }
+        }
+    elif chart_type == 'SCATTER':
+        chart_spec['basicChart']['chartType'] = 'SCATTER'
+        chart_spec['basicChart']['pointSize'] = 10
+    elif chart_type == 'AREA':
+        chart_spec['basicChart']['chartType'] = 'AREA'
+    elif chart_type == 'CANDLESTICK':
+        chart_spec['basicChart']['chartType'] = 'CANDLESTICK'
+    else:
+        raise ValueError("Unsupported chart type")
+
+    return chart_spec
